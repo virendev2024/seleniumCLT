@@ -72,8 +72,8 @@
                     <version>3.5.0</version>
                     <configuration>
                         <suiteXmlFiles>
-                            <suiteXmlFile>testSuits/EdgeTest.xml</suiteXmlFile>
                             <suiteXmlFile>testSuits/ChromeTest.xml</suiteXmlFile>
+                            <suiteXmlFile>testSuits/EdgeTest.xml</suiteXmlFile>
                         </suiteXmlFiles>
                     </configuration>
                 </plugin>
