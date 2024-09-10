@@ -16,7 +16,7 @@ public class EdgeTest {
         options.addArguments("--headless");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
-        System.setProperty("webdriver.chrome.verboseLogging", "true");
+        System.setProperty("webdriver.edge.verboseLogging", "true");
         options.addArguments("window-size=1920,1200");
         WebDriver driver = new EdgeDriver(options);
         driver.get("https://www.google.com");
