@@ -13,108 +13,84 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Set up JDK 17
       - name: Set up JDK 17
+        id: setup-java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+      
+      # 3. Set JAVA_HOME dynamically
+      - name: Set JAVA_HOME
+        run: echo "JAVA_HOME=${{ steps.setup-java.outputs.java-home }}" >> $GITHUB_ENV
 
+      # 4. Install Dependencies
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip software-properties-common xvfb
+
+      # 5. Cache Maven packages
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      # 6. Install Google Chrome
       - name: Install Chrome
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
           google-chrome --version
 
-      - name: Install ChromeDriver
-        run: |
-          CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)
-          echo "Latest ChromeDriver version: $CHROME_DRIVER_VERSION"
-          wget https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip
-          sudo unzip chromedriver_linux64.zip -d /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
-          chromedriver --version
+      # 7. Setup ChromeDriver using pre-built action
+      - name: Setup ChromeDriver
+        uses: actions/setup-chromedriver@v4
+        with:
+          version: latest
 
+      # 8. Install Microsoft Edge
       - name: Install Edge
         run: |
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
           sudo add-apt-repository -y 'deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main'
-          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
           sudo apt-get update
           sudo apt-get install -y microsoft-edge-stable
           microsoft-edge --version
 
-      - name: Install EdgeDriver
-        run: |
-          set -x  # Enable command tracing for debugging
+      # 9. Setup EdgeDriver using pre-built action
+      - name: Setup EdgeDriver
+        uses: roberts1000/setup-edgedriver@v1
+        with:
+          version: latest
+          architecture: x64
+          install-dir: /usr/local/bin
 
-          # Confirm that microsoft-edge is installed and in PATH
-          if ! command -v microsoft-edge &> /dev/null
-          then
-            echo "microsoft-edge could not be found"
-            exit 1
-          fi
-
-          # Display the path to microsoft-edge
-          which microsoft-edge
-
-          # Get the Microsoft Edge version
-          EDGE_VERSION_OUTPUT=$(microsoft-edge --version)
-          echo "Microsoft Edge version output: '$EDGE_VERSION_OUTPUT'"
-
-          # Extract the major version number (e.g., 114 from "Microsoft Edge 114.0.1234.56")
-          EDGE_VERSION=$(echo "$EDGE_VERSION_OUTPUT" | grep -oP '^\d+')
-          echo "Detected Microsoft Edge major version: $EDGE_VERSION"
-
-          # Check if EDGE_VERSION was successfully extracted
-          if [ -z "$EDGE_VERSION" ]; then
-            echo "Failed to extract the major version from Edge version output."
-            exit 1
-          fi
-
-          # Fetch the latest EdgeDriver version for the major Edge version
-          EDGE_DRIVER_VERSION=$(curl -sS "https://msedgedriver.azureedge.net/LATEST_RELEASE_$EDGE_VERSION" | tr -d '\r\n')
-          echo "Fetched EdgeDriver version: '$EDGE_DRIVER_VERSION'"
-
-          # Validate that EDGE_DRIVER_VERSION is not empty and is a valid version number
-          if [[ ! "$EDGE_DRIVER_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid EdgeDriver version retrieved: '$EDGE_DRIVER_VERSION'"
-            exit 1
-          fi
-
-          # Download and install EdgeDriver
-          wget "https://msedgedriver.azureedge.net/$EDGE_DRIVER_VERSION/edgedriver_linux64.zip"
-          sudo unzip edgedriver_linux64.zip -d /usr/local/bin/
-          sudo chmod +x /usr/local/bin/msedgedriver
-          msedgedriver --version
-
+      # 10. Start Xvfb
       - name: Start Xvfb
         run: |
-          sudo apt-get install -y xvfb
           Xvfb :99 -screen 0 1920x1080x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
 
+      # 11. Build with Maven
       - name: Build with Maven
         run: mvn clean compile
 
+      # 12. Run Tests
       - name: Run Tests
         run: mvn clean test
         env:
           DISPLAY: ":99"
 
+      # 13. Upload Test Results
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v3
