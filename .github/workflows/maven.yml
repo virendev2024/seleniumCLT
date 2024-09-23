@@ -41,6 +41,7 @@ jobs:
       - name: Install ChromeDriver
         run: |
           CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)
+          echo "Latest ChromeDriver version: $CHROME_DRIVER_VERSION"
           wget https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip
           sudo unzip chromedriver_linux64.zip -d /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
@@ -58,9 +59,22 @@ jobs:
 
       - name: Install EdgeDriver
         run: |
-          EDGE_VERSION=$(microsoft-edge --version | grep -oP '\d+\.\d+\.\d+\.\d+')
-          EDGE_DRIVER_VERSION=$(curl -sS https://msedgedriver.azureedge.net/LATEST_RELEASE_$EDGE_VERSION | tr -d '\r')
-          wget https://msedgedriver.azureedge.net/$EDGE_DRIVER_VERSION/edgedriver_linux64.zip
+          # Extract the major version of Microsoft Edge
+          EDGE_VERSION=$(microsoft-edge --version | grep -oP '^\d+')
+          echo "Detected Microsoft Edge version: $EDGE_VERSION"
+          
+          # Fetch the latest EdgeDriver version for the major Edge version
+          EDGE_DRIVER_VERSION=$(curl -sS "https://msedgedriver.azureedge.net/LATEST_RELEASE_$EDGE_VERSION" | tr -d '\r\n')
+          echo "Latest EdgeDriver version for Edge $EDGE_VERSION: $EDGE_DRIVER_VERSION"
+          
+          # Validate that EDGE_DRIVER_VERSION is not empty
+          if [ -z "$EDGE_DRIVER_VERSION" ]; then
+            echo "Failed to fetch EdgeDriver version for Edge $EDGE_VERSION"
+            exit 1
+          fi
+          
+          # Download and install EdgeDriver
+          wget "https://msedgedriver.azureedge.net/$EDGE_DRIVER_VERSION/edgedriver_linux64.zip"
           sudo unzip edgedriver_linux64.zip -d /usr/local/bin/
           sudo chmod +x /usr/local/bin/msedgedriver
           msedgedriver --version
