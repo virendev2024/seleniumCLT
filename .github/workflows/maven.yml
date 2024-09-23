@@ -59,20 +59,42 @@ jobs:
 
       - name: Install EdgeDriver
         run: |
-          # Extract the major version of Microsoft Edge
-          EDGE_VERSION=$(microsoft-edge --version | grep -oP '^\d+')
-          echo "Detected Microsoft Edge version: $EDGE_VERSION"
-          
-          # Fetch the latest EdgeDriver version for the major Edge version
-          EDGE_DRIVER_VERSION=$(curl -sS "https://msedgedriver.azureedge.net/LATEST_RELEASE_$EDGE_VERSION" | tr -d '\r\n')
-          echo "Latest EdgeDriver version for Edge $EDGE_VERSION: $EDGE_DRIVER_VERSION"
-          
-          # Validate that EDGE_DRIVER_VERSION is not empty
-          if [ -z "$EDGE_DRIVER_VERSION" ]; then
-            echo "Failed to fetch EdgeDriver version for Edge $EDGE_VERSION"
+          set -x  # Enable command tracing for debugging
+
+          # Confirm that microsoft-edge is installed and in PATH
+          if ! command -v microsoft-edge &> /dev/null
+          then
+            echo "microsoft-edge could not be found"
             exit 1
           fi
-          
+
+          # Display the path to microsoft-edge
+          which microsoft-edge
+
+          # Get the Microsoft Edge version
+          EDGE_VERSION_OUTPUT=$(microsoft-edge --version)
+          echo "Microsoft Edge version output: '$EDGE_VERSION_OUTPUT'"
+
+          # Extract the major version number (e.g., 114 from "Microsoft Edge 114.0.1234.56")
+          EDGE_VERSION=$(echo "$EDGE_VERSION_OUTPUT" | grep -oP '^\d+')
+          echo "Detected Microsoft Edge major version: $EDGE_VERSION"
+
+          # Check if EDGE_VERSION was successfully extracted
+          if [ -z "$EDGE_VERSION" ]; then
+            echo "Failed to extract the major version from Edge version output."
+            exit 1
+          fi
+
+          # Fetch the latest EdgeDriver version for the major Edge version
+          EDGE_DRIVER_VERSION=$(curl -sS "https://msedgedriver.azureedge.net/LATEST_RELEASE_$EDGE_VERSION" | tr -d '\r\n')
+          echo "Fetched EdgeDriver version: '$EDGE_DRIVER_VERSION'"
+
+          # Validate that EDGE_DRIVER_VERSION is not empty and is a valid version number
+          if [[ ! "$EDGE_DRIVER_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid EdgeDriver version retrieved: '$EDGE_DRIVER_VERSION'"
+            exit 1
+          fi
+
           # Download and install EdgeDriver
           wget "https://msedgedriver.azureedge.net/$EDGE_DRIVER_VERSION/edgedriver_linux64.zip"
           sudo unzip edgedriver_linux64.zip -d /usr/local/bin/
