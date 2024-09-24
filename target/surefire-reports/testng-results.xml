@@ -2,24 +2,24 @@
 <testng-results ignored="0" total="2" passed="2" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2024-09-10T15:14:54 BST" name="All Test Suite" finished-at="2024-09-10T15:15:07 BST" duration-ms="12878">
+  <suite started-at="2024-09-11T09:09:51 BST" name="All Test Suite" finished-at="2024-09-11T09:10:06 BST" duration-ms="14065">
     <groups>
     </groups>
-    <test started-at="2024-09-10T15:14:54 BST" name="ChromeTest" finished-at="2024-09-10T15:15:07 BST" duration-ms="12878">
+    <test started-at="2024-09-11T09:09:51 BST" name="ChromeTest" finished-at="2024-09-11T09:10:06 BST" duration-ms="14065">
       <class name="Tests.ChromeTest">
-        <test-method signature="testChromeDriver()[pri:0, instance:Tests.ChromeTest@323b36e0]" started-at="2024-09-10T15:14:54 BST" name="testChromeDriver" finished-at="2024-09-10T15:15:07 BST" duration-ms="12803" status="PASS">
+        <test-method signature="testChromeDriver()[pri:0, instance:Tests.ChromeTest@323b36e0]" started-at="2024-09-11T09:09:52 BST" name="testChromeDriver" finished-at="2024-09-11T09:10:05 BST" duration-ms="13917" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- testChromeDriver -->
       </class> <!-- Tests.ChromeTest -->
     </test> <!-- ChromeTest -->
   </suite> <!-- All Test Suite -->
-  <suite started-at="2024-09-10T15:15:07 BST" name="All Test Suite (0)" finished-at="2024-09-10T15:15:18 BST" duration-ms="11148">
+  <suite started-at="2024-09-11T09:10:06 BST" name="All Test Suite (0)" finished-at="2024-09-11T09:10:20 BST" duration-ms="14190">
     <groups>
     </groups>
-    <test started-at="2024-09-10T15:15:07 BST" name="EdgeTest" finished-at="2024-09-10T15:15:18 BST" duration-ms="11148">
+    <test started-at="2024-09-11T09:10:06 BST" name="EdgeTest" finished-at="2024-09-11T09:10:20 BST" duration-ms="14190">
       <class name="Tests.EdgeTest">
-        <test-method signature="testEdgeDriver()[pri:0, instance:Tests.EdgeTest@6aeb35e6]" started-at="2024-09-10T15:15:07 BST" name="testEdgeDriver" finished-at="2024-09-10T15:15:18 BST" duration-ms="11146" status="PASS">
+        <test-method signature="testEdgeDriver()[pri:0, instance:Tests.EdgeTest@6aeb35e6]" started-at="2024-09-11T09:10:06 BST" name="testEdgeDriver" finished-at="2024-09-11T09:10:20 BST" duration-ms="14186" status="PASS">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- testEdgeDriver -->
