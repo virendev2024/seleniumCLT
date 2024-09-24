@@ -1,4 +1,4 @@
-name: Java CI with Maven
+name: Java CI with maven
 
 on:
   push:
@@ -12,85 +12,67 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      xvfb:
+        image: selenium/standalone-chrome
+        options: --privileged
+
     steps:
-      # 1. Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Set up JDK 17
       - name: Set up JDK 17
-        id: setup-java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-      
-      # 3. Set JAVA_HOME dynamically
-      - name: Set JAVA_HOME
-        run: echo "JAVA_HOME=${{ steps.setup-java.outputs.java-home }}" >> $GITHUB_ENV
 
-      # 4. Install Dependencies
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip software-properties-common xvfb
-
-      # 5. Cache Maven packages
       - name: Cache Maven packages
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
-          path: ~/.m2/repository
+          path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-
-      # 6. Install Google Chrome
       - name: Install Chrome
         run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip xvfb
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
           google-chrome --version
-
-      # 7. Setup ChromeDriver using pre-built action
-      - name: Setup ChromeDriver
-        uses: actions/setup-chromedriver@v4
-        with:
-          version: latest
-
-      # 8. Install Microsoft Edge
+      - name: Install ChromeDriver
+        run: |
+          CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)
+          wget https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip -d /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+          chromedriver --version
       - name: Install Edge
         run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
           sudo add-apt-repository -y 'deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main'
-          curl https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/microsoft.gpg
+          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+          sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
           sudo apt-get update
           sudo apt-get install -y microsoft-edge-stable
           microsoft-edge --version
-
-      # 9. Setup EdgeDriver using pre-built action
-      - name: Setup EdgeDriver
-        uses: roberts1000/setup-edgedriver@v1
-        with:
-          version: latest
-          architecture: x64
-          install-dir: /usr/local/bin
-
-      # 10. Start Xvfb
-      - name: Start Xvfb
+      - name: Install EdgeDriver
         run: |
-          Xvfb :99 -screen 0 1920x1080x24 &
-          echo "DISPLAY=:99" >> $GITHUB_ENV
-
-      # 11. Build with Maven
+          EDGE_DRIVER_VERSION="128.0.2739.68" # Replace this with a known version if needed
+          wget https://msedgedriver.azureedge.net/$EDGE_DRIVER_VERSION/edgedriver_linux64.zip
+          unzip edgedriver_linux64.zip -d /usr/local/bin/
+          sudo chmod +x /usr/local/bin/msedgedriver
+          msedgedriver --version
       - name: Build with Maven
         run: mvn clean compile
 
-      # 12. Run Tests
       - name: Run Tests
         run: mvn clean test
         env:
-          DISPLAY: ":99"
+          DISPLAY: ":99.0"
 
-      # 13. Upload Test Results
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v3
