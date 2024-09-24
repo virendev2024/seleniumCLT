@@ -1,4 +1,4 @@
-name: Java CI with maven
+name: Java CI with Maven
 
 on:
   push:
@@ -11,11 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    services:
-      xvfb:
-        image: selenium/standalone-chrome
-        options: --privileged
 
     steps:
       - name: Checkout repository
@@ -62,19 +57,17 @@ jobs:
           sudo apt-get install -y microsoft-edge-stable
           microsoft-edge --version
 
-      - name: Install EdgeDriver
+      - name: Install EdgeDriver using WebDriverManager
         run: |
-          EDGE_DRIVER_VERSION="128.0.2739.68" # Replace this with a known version if needed
-          wget https://msedgedriver.azureedge.net/$EDGE_DRIVER_VERSION/edgedriver_linux64.zip
-          unzip edgedriver_linux64.zip -d /usr/local/bin/
-          sudo chmod +x /usr/local/bin/msedgedriver
-          msedgedriver --version
+          mvn org.apache.maven.plugins:maven-dependency-plugin:2.10:get \
+            -DrepoUrl=https://maven.apache.org -Dartifact=io.github.bonigarcia:webdrivermanager:5.0.3
+          mvn exec:java -Dexec.mainClass="io.github.bonigarcia.wdm.WebDriverManager" -Dexec.args="edge setup"
 
       - name: Build with Maven
         run: mvn clean compile
 
       - name: Run Tests
-        run: mvn clean test
+        run: xvfb-run -a mvn clean test
         env:
           DISPLAY: ":99.0"
 
